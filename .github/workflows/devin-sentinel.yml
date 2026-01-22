@@ -2,7 +2,7 @@ name: "Devin Security Sentinel"
 
 on:
   push:
-    branches: ["main"]
+    branches: ["master"]
 
 jobs:
   security-remediation:
