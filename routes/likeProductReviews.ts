@@ -21,6 +21,11 @@ export function likeProductReviews () {
       return res.status(401).json({ error: 'Unauthorized' })
     }
 
+    // Validate that id is a string to prevent NoSQL injection
+    if (typeof id !== 'string') {
+      return res.status(400).json({ error: 'Invalid review ID' })
+    }
+
     try {
       const review = await db.reviewsCollection.findOne({ _id: id })
       if (!review) {
