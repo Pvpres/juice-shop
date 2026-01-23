@@ -3,23 +3,19 @@
  * SPDX-License-Identifier: MIT
  */
 
-import * as utils from '../lib/utils'
-import * as challengeUtils from '../lib/challengeUtils'
 import { type Request, type Response } from 'express'
 import * as db from '../data/mongodb'
-import { challenges } from '../data/datacache'
+import * as utils from '../lib/utils'
 
 export function trackOrder () {
   return (req: Request, res: Response) => {
-    // Truncate id to avoid unintentional RCE
-    const id = !utils.isChallengeEnabled(challenges.reflectedXssChallenge) ? String(req.params.id).replace(/[^\w-]+/g, '') : utils.trunc(req.params.id, 60)
+    const rawId = req.params.id
+    const sanitizedId = String(rawId).replace(/[^\w-]+/g, '')
 
-    challengeUtils.solveIf(challenges.reflectedXssChallenge, () => { return utils.contains(id, '<iframe src="javascript:alert(`xss`)">') })
-    db.ordersCollection.find({ orderId: String(id) }).then((order: any) => {
+    db.ordersCollection.find({ orderId: sanitizedId }).then((order: any) => {
       const result = utils.queryResultToJson(order)
-      challengeUtils.solveIf(challenges.noSqlOrdersChallenge, () => { return result.data.length > 1 })
       if (result.data[0] === undefined) {
-        result.data[0] = { orderId: id }
+        result.data[0] = { orderId: sanitizedId }
       }
       res.json(result)
     }, () => {
